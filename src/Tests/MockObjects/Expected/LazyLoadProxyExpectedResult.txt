@@ -1,0 +1,41 @@
+<?php
+namespace Pantono\Proxy;
+
+use Pantono\Contracts\Application\Proxy\ProxyInterface;
+use Pantono\Hydrator\Tests\MockObjects\BoolModel;
+use Pantono\Hydrator\Tests\MockObjects\LazyLoadModel;
+use Pantono\Hydrator\Traits\LocatorAwareTrait;
+
+class LazyLoadModelProxyClass extends LazyLoadModel implements ProxyInterface
+{
+    use LocatorAwareTrait;
+
+    private array $hydratorParams = [];
+    private array $completedLookups = [];
+
+    public function setHydratorParams(array $params): void
+    {
+        $this->hydratorParams = $params;
+    }
+
+    public function getTest(): BoolModel
+    {
+        global $app;
+        $parentValue = parent::getTest();
+        if (isset($this->completedLookups['getTest'])) {
+            return $parentValue;
+        }
+        $this->completedLookups['getTest'] = true;
+        $value = $this->getLocator()->loadDependency('SomeClass')->getSomeMethod($this->hydratorParams['test_field']);
+        if ($value) {
+            parent::setTest($value);
+        }
+        return parent::getTest();
+    }
+
+    public function setTest(BoolModel $test): void
+    {
+        parent::setTest($test);
+        $this->completedLookups['getTest'] = true;
+    }
+}
