@@ -2,7 +2,7 @@
 
 namespace Pantono\Hydrator\Tests\MockObjects;
 
-use Pantono\Hydrator\Attributes\FieldName;
+use Pantono\Contracts\Attributes\FieldName;
 
 class DifferentFieldModel
 {

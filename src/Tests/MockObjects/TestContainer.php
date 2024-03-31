@@ -2,7 +2,6 @@
 
 namespace Pantono\Hydrator\Tests\MockObjects;
 
-
 use Pantono\Contracts\Container\ContainerInterface;
 use Pantono\Contracts\Locator\LocatorInterface;
 
