@@ -2,9 +2,9 @@
 
 namespace Pantono\Hydrator\Tests\MockObjects;
 
-use Pantono\Hydrator\Attributes\Locator;
-use Pantono\Hydrator\Attributes\FieldName;
-use Pantono\Hydrator\Attributes\Lazy;
+use Pantono\Contracts\Attributes\Locator;
+use Pantono\Contracts\Attributes\FieldName;
+use Pantono\Contracts\Attributes\Lazy;
 
 class LazyLoadModel
 {

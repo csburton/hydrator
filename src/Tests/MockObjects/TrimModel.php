@@ -2,7 +2,7 @@
 
 namespace Pantono\Hydrator\Tests\MockObjects;
 
-use Pantono\Hydrator\Attributes\Filter;
+use Pantono\Contracts\Attributes\Filter;
 
 class TrimModel
 {

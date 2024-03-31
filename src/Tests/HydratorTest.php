@@ -29,7 +29,10 @@ class HydratorTest extends TestCase
         $expected->setId(1);
         $expected->setName('test');
 
-        $this->assertEquals($expected, $this->getHydrator()->hydrate(SimpleModel::class, ['id' => '1', 'name' => 'test']));
+        $this->assertEquals(
+            $expected,
+            $this->getHydrator()->hydrate(SimpleModel::class, ['id' => '1', 'name' => 'test'])
+        );
     }
 
     public function testDateTimeHydrator(): void
@@ -38,7 +41,13 @@ class HydratorTest extends TestCase
         $expected->setId(2);
         $expected->setDate(new \DateTime('2021-01-01 00:00:00'));
 
-        $this->assertEquals($expected, $this->getHydrator()->hydrate(DateTimeModel::class, ['id' => '2', 'date' => '2021-01-01 00:00:00']));
+        $this->assertEquals(
+            $expected,
+            $this->getHydrator()->hydrate(
+                DateTimeModel::class,
+                ['id' => '2', 'date' => '2021-01-01 00:00:00']
+            )
+        );
         $this->assertInstanceOf(\DateTime::class, $expected->getDate());
     }
 
@@ -48,7 +57,10 @@ class HydratorTest extends TestCase
         $expected->setId(1);
         $expected->setFloat(0.05);
 
-        $this->assertEquals($expected, $this->getHydrator()->hydrate(FloatModel::class, ['id' => '1', 'float' => '0.05']));
+        $this->assertEquals(
+            $expected,
+            $this->getHydrator()->hydrate(FloatModel::class, ['id' => '1', 'float' => '0.05'])
+        );
     }
 
     public function testBoolHydrate(): void
@@ -58,7 +70,10 @@ class HydratorTest extends TestCase
 
         $this->assertEquals($expected, $this->getHydrator()->hydrate(BoolModel::class, ['bool' => '1']));
         $this->assertEquals($expected, $this->getHydrator()->hydrate(BoolModel::class, ['bool' => 'yes']));
-        $this->assertNotEquals($expected->isBool(), $this->getHydrator()->hydrate(BoolModel::class, ['bool' => '0'])->isBool());
+        $this->assertNotEquals(
+            $expected->isBool(),
+            $this->getHydrator()->hydrate(BoolModel::class, ['bool' => '0'])->isBool()
+        );
     }
 
     public function testJsonHydrate(): void
@@ -66,7 +81,10 @@ class HydratorTest extends TestCase
         $expected = new JsonModel();
         $expected->setData(['test' => 'one', 'test2' => 2]);
 
-        $this->assertEquals($expected, $this->getHydrator()->hydrate(JsonModel::class, ['data' => '{"test":"one","test2":2}']));
+        $this->assertEquals(
+            $expected,
+            $this->getHydrator()->hydrate(JsonModel::class, ['data' => '{"test":"one","test2":2}'])
+        );
     }
 
     public function testTrimHydrate(): void
@@ -74,7 +92,10 @@ class HydratorTest extends TestCase
         $expected = new TrimModel();
         $expected->setData('test');
 
-        $this->assertEquals($expected, $this->getHydrator()->hydrate(TrimModel::class, ['data' => '    test      ']));
+        $this->assertEquals(
+            $expected,
+            $this->getHydrator()->hydrate(TrimModel::class, ['data' => '    test      '])
+        );
     }
 
     public function testDifferentField(): void
@@ -82,7 +103,10 @@ class HydratorTest extends TestCase
         $expected = new DifferentFieldModel();
         $expected->setData('test');
 
-        $this->assertEquals($expected, $this->getHydrator()->hydrate(DifferentFieldModel::class, ['other_data' => 'test']));
+        $this->assertEquals(
+            $expected,
+            $this->getHydrator()->hydrate(DifferentFieldModel::class, ['other_data' => 'test'])
+        );
     }
 
     private function getHydrator(): Hydrator

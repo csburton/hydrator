@@ -10,10 +10,7 @@ use Nette\PhpGenerator\Method;
 use Nette\PhpGenerator\PsrPrinter;
 use ReflectionNamedType;
 use Pantono\Hydrator\Traits\LocatorAwareTrait;
-use Pantono\Hydrator\Attributes\FieldName;
-use Pantono\Hydrator\Attributes\Filter;
-use Pantono\Hydrator\Attributes\Locator;
-use Pantono\Hydrator\Attributes\Lazy;
+use Pantono\Utilities\ReflectionUtilities;
 
 class ProxyGenerator
 {
@@ -44,14 +41,14 @@ class ProxyGenerator
         foreach ($reflection->getProperties() as $property) {
             $lazy = false;
             $hydrator = null;
-            $details = $this->getHydratorFieldConfig($property);
-            if (isset($details['lazy'])) {
-                $lazy = $details['lazy'];
+            $config = ReflectionUtilities::parseAttributesIntoConfig($property);
+            if (isset($config['lazy'])) {
+                $lazy = $config['lazy'];
             }
-            if (isset($details['hydrator'])) {
-                $hydrator = $details['hydrator'];
+            if (isset($config['hydrator'])) {
+                $hydrator = $config['hydrator'];
             }
-            $fieldName = $details['field_name'];
+            $fieldName = $config['field_name'];
 
             if ($lazy === true && $hydrator !== null && $fieldName) {
                 $getter = lcfirst(StringUtilities::camelCase('get' . ucfirst($property->getName())));
@@ -113,41 +110,10 @@ SETTER_BODY;
             $method->setReturnType($reflectionMethod->getReturnType()->getName());
         }
         foreach ($reflectionMethod->getParameters() as $parameter) {
-            $method->addParameter($parameter->getName())->setType($parameter->getType())->setNullable($parameter->allowsNull());
+            $method->addParameter(
+                $parameter->getName()
+            )->setType($parameter->getType())->setNullable($parameter->allowsNull());
         }
         return $method;
-    }
-
-    private function getHydratorFieldConfig(\ReflectionProperty $property): array
-    {
-        $info = [
-            'type' => null,
-            'hydrator' => null,
-            'field_name' => StringUtilities::snakeCase($property->getName()),
-            'filter' => null,
-            'lazy' => null,
-            'format' => null
-        ];
-        $type = $property->getType();
-        if ($type instanceof ReflectionNamedType) {
-            $info['type'] = $type->getName();
-        }
-        foreach ($property->getAttributes() as $attribute) {
-            $instance = $attribute->newInstance();
-            if (get_class($instance) === FieldName::class) {
-                $info['field_name'] = $instance->name;
-            }
-            if (get_class($instance) === Filter::class) {
-                $info['filter'] = $instance->filter;
-            }
-            if (get_class($instance) === Locator::class) {
-                $info['hydrator'] = $instance->serviceName . '::' . $instance->methodName;
-            }
-            if (get_class($instance) === Lazy::class) {
-                $info['lazy'] = true;
-            }
-        }
-
-        return $info;
     }
 }

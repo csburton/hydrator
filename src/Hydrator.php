@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Pantono\Hydrator;
@@ -6,13 +7,10 @@ namespace Pantono\Hydrator;
 use Pantono\Utilities\StringUtilities;
 use Pantono\Utilities\DateTimeParser;
 use Pantono\Utilities\ApplicationHelper;
-use ReflectionNamedType;
 use Pantono\Contracts\Container\ContainerInterface;
 use Pantono\Contracts\Hydrator\HydratorInterface;
-use Pantono\Hydrator\Attributes\FieldName;
-use Pantono\Hydrator\Attributes\Locator;
-use Pantono\Hydrator\Attributes\Filter;
-use Pantono\Hydrator\Attributes\Lazy;
+use Pantono\Contracts\Attributes\Locator;
+use Pantono\Utilities\ReflectionUtilities;
 
 class Hydrator implements HydratorInterface
 {
@@ -37,31 +35,31 @@ class Hydrator implements HydratorInterface
             return null;
         }
         foreach ($reflectionClass->getProperties() as $property) {
-            $info = $this->getHydratorFieldConfig($property);
-            $field = $info['field_name'] ?: StringUtilities::snakeCase($property->getName());
+            $config = ReflectionUtilities::parseAttributesIntoConfig($property);
+            $field = $config['field_name'] ?: StringUtilities::snakeCase($property->getName());
             $data = $hydrateData[$field] ?? null;
             if ($data !== null || $field === '$this') {
-                if ($info['lazy'] === true) {
+                if ($config['lazy'] === true) {
                     continue;
                 }
-                if ($info['hydrator'] !== null) {
-                    [$dependency, $method] = explode('::', $info['hydrator']);
+                if ($config['hydrator'] !== null) {
+                    [$dependency, $method] = explode('::', $config['hydrator']);
                     if ($field === '$this') {
                         $data = $class;
                     }
                     $data = $this->container->getLocator()->loadDependency('@' . $dependency)->$method($data);
                 } else {
-                    $type = strtolower($info['type']);
+                    $type = strtolower($config['type']);
                     if (str_starts_with($type, '?')) {
                         $type = substr($type, 1);
                     }
-                    if ($info['type'] === 'int') {
+                    if ($config['type'] === 'int') {
                         $data = (int)$data;
                     }
-                    if ($info['type'] === 'float') {
+                    if ($config['type'] === 'float') {
                         $data = (float)$data;
                     }
-                    if ($info['type'] === 'bool') {
+                    if ($config['type'] === 'bool') {
                         if ($data === 'yes') {
                             $data = true;
                         }
@@ -74,29 +72,29 @@ class Hydrator implements HydratorInterface
                         $type = substr($type, 1);
                     }
                     if ($type === 'datetime' || $type === 'datetimeinterface') {
-                        if ($info['format'] !== null) {
-                            $data = \DateTime::createFromFormat($info['format'], $data);
+                        if ($config['format'] !== null) {
+                            $data = \DateTime::createFromFormat($config['format'], $data);
                         } else {
                             $data = DateTimeParser::parseDate($data);
                         }
                     }
                     if ($type === 'datetimeimmutable') {
-                        if ($info['format'] !== null) {
-                            $data = \DateTimeImmutable::createFromFormat($info['format'], $data);
+                        if ($config['format'] !== null) {
+                            $data = \DateTimeImmutable::createFromFormat($config['format'], $data);
                         } else {
                             $data = DateTimeParser::parseDateImmutable($data);
                         }
                     }
                 }
                 $setter = lcfirst(StringUtilities::camelCase('set' . ucfirst($property->getName())));
-                if ($info['filter']) {
-                    if ($info['filter'] === 'trim') {
+                if ($config['filter']) {
+                    if ($config['filter'] === 'trim') {
                         $data = trim($data);
                     }
-                    if ($info['filter'] === 'json_decode') {
+                    if ($config['filter'] === 'json_decode') {
                         $data = json_decode($data, true);
                     }
-                    if ($info['filter'] === 'explode') {
+                    if ($config['filter'] === 'explode') {
                         if (!$data) {
                             $data = [];
                         } elseif (is_array($data)) {
@@ -110,7 +108,7 @@ class Hydrator implements HydratorInterface
                             });
                         }
                     }
-                    if ($info['filter'] === 'array_from_string') {
+                    if ($config['filter'] === 'array_from_string') {
                         $data = $this->createArrayFromFieldString($data);
                     }
                 }
@@ -172,7 +170,6 @@ class Hydrator implements HydratorInterface
         $target = $dir . $cacheKey . '.php';
         $proxyClassName = $reflection->getShortName() . 'ProxyClass';
         if (!file_exists($target)) {
-
             $proxyGenerator = new ProxyGenerator();
             $proxyClass = $proxyGenerator->generateProxyClass($className);
 
@@ -208,38 +205,5 @@ class Hydrator implements HydratorInterface
         }
 
         return array_filter($fields);
-    }
-
-    private function getHydratorFieldConfig(\ReflectionProperty $property): array
-    {
-        $info = [
-            'type' => null,
-            'hydrator' => null,
-            'field_name' => StringUtilities::snakeCase($property->getName()),
-            'filter' => null,
-            'lazy' => null,
-            'format' => null
-        ];
-        $type = $property->getType();
-        if ($type instanceof ReflectionNamedType) {
-            $info['type'] = $type->getName();
-        }
-        foreach ($property->getAttributes() as $attribute) {
-            $instance = $attribute->newInstance();
-            if (get_class($instance) === FieldName::class) {
-                $info['field_name'] = $instance->name;
-            }
-            if (get_class($instance) === Filter::class) {
-                $info['filter'] = $instance->filter;
-            }
-            if (get_class($instance) === Locator::class) {
-                $info['hydrator'] = $instance->serviceName . '::' . $instance->methodName;
-            }
-            if (get_class($instance) === Lazy::class) {
-                $info['lazy'] = true;
-            }
-        }
-
-        return $info;
     }
 }
