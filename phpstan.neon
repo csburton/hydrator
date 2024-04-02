@@ -1,5 +1,5 @@
 parameters:
-  level: 9
+  level: 8
   paths:
     - src
   bootstrapFiles:
@@ -10,7 +10,3 @@ parameters:
   ignoreErrors:
     - message: '#^Method (.*)::(.*) return type has no value type specified in iterable type array.$#'
     - message: '#^Method (.*)::(.*) has parameter (.*) with no value type specified in iterable type array.$#'
-services:
-  - class: Pantono\Hydrator\Extensions\PhpStan\HydratorReturnsCorrectType
-    tags:
-      - phpstan.broker.dynamicMethodReturnTypeExtension
