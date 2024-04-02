@@ -21,10 +21,6 @@ class Hydrator implements HydratorInterface
         $this->container = $container;
     }
 
-    /**
-     * @param class-string $className
-     * @param array<mixed>|null $hydrateData
-     */
     public function hydrate(string $className, ?array $hydrateData = []): mixed
     {
         if ($hydrateData === null) {
@@ -154,8 +150,7 @@ class Hydrator implements HydratorInterface
 
     /**
      * @param class-string $className
-     * @param array $data
-     * @return array<int, mixed>
+     * @param array<int, array<mixed>|null> $data
      */
     public function hydrateSet(string $className, array $data): array
     {
