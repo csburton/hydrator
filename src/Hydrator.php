@@ -148,10 +148,6 @@ class Hydrator implements HydratorInterface
         return $this->container->getLocator()->loadDependency($service)->$methodName($field);
     }
 
-    /**
-     * @param class-string $className
-     * @param array<int, array<mixed>> $data
-     */
     public function hydrateSet(string $className, array $data): array
     {
         $items = [];
