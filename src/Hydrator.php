@@ -150,7 +150,7 @@ class Hydrator implements HydratorInterface
 
     /**
      * @param class-string $className
-     * @param array<int, array<mixed>|null> $data
+     * @param array<int, array<mixed>> $data
      */
     public function hydrateSet(string $className, array $data): array
     {
