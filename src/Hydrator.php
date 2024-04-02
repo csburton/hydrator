@@ -21,6 +21,10 @@ class Hydrator implements HydratorInterface
         $this->container = $container;
     }
 
+    /**
+     * @param class-string $className
+     * @param array<mixed>|null $hydrateData
+     */
     public function hydrate(string $className, ?array $hydrateData = []): mixed
     {
         if ($hydrateData === null) {
@@ -37,6 +41,10 @@ class Hydrator implements HydratorInterface
         foreach ($reflectionClass->getProperties() as $property) {
             $config = ReflectionUtilities::parseAttributesIntoConfig($property);
             $field = $config['field_name'] ?: StringUtilities::snakeCase($property->getName());
+            $type = $config['type'] ?? '';
+            /**
+             * @var int|string|null $data
+             */
             $data = $hydrateData[$field] ?? null;
             if ($data !== null || $field === '$this') {
                 if ($config['lazy'] === true) {
@@ -49,17 +57,17 @@ class Hydrator implements HydratorInterface
                     }
                     $data = $this->container->getLocator()->loadDependency('@' . $dependency)->$method($data);
                 } else {
-                    $type = strtolower($config['type']);
+                    $type = strtolower($type);
                     if (str_starts_with($type, '?')) {
                         $type = substr($type, 1);
                     }
-                    if ($config['type'] === 'int') {
-                        $data = (int)$data;
+                    if ($type === 'int') {
+                        $data = intval($data);
                     }
-                    if ($config['type'] === 'float') {
-                        $data = (float)$data;
+                    if ($type === 'float') {
+                        $data = floatval($data);
                     }
-                    if ($config['type'] === 'bool') {
+                    if ($type === 'bool') {
                         if ($data === 'yes') {
                             $data = true;
                         }
@@ -73,16 +81,19 @@ class Hydrator implements HydratorInterface
                     }
                     if ($type === 'datetime' || $type === 'datetimeinterface') {
                         if ($config['format'] !== null) {
-                            $data = \DateTime::createFromFormat($config['format'], $data);
+                            $data = \DateTime::createFromFormat($config['format'], strval($data));
                         } else {
-                            $data = DateTimeParser::parseDate($data);
+                            $data = DateTimeParser::parseDate(strval($data));
                         }
                     }
                     if ($type === 'datetimeimmutable') {
+                        /**
+                         * @var string $data
+                         */
                         if ($config['format'] !== null) {
-                            $data = \DateTimeImmutable::createFromFormat($config['format'], $data);
+                            $data = \DateTimeImmutable::createFromFormat($config['format'], strval($data));
                         } else {
-                            $data = DateTimeParser::parseDateImmutable($data);
+                            $data = DateTimeParser::parseDateImmutable(strval($data));
                         }
                     }
                 }
@@ -141,6 +152,11 @@ class Hydrator implements HydratorInterface
         return $this->container->getLocator()->loadDependency($service)->$methodName($field);
     }
 
+    /**
+     * @param class-string $className
+     * @param array $data
+     * @return array<mixed>
+     */
     public function hydrateSet(string $className, array $data): array
     {
         $items = [];
