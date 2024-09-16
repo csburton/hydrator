@@ -47,11 +47,17 @@ class Hydrator implements HydratorInterface
                     continue;
                 }
                 if ($config['hydrator'] !== null) {
-                    [$dependency, $method] = explode('::', $config['hydrator']);
+                    [$dependencyString, $method] = explode('::', $config['hydrator']);
                     if ($field === '$this') {
                         $data = $class;
                     }
-                    $data = $this->container->getLocator()->loadDependency('@' . $dependency)->$method($data);
+                    $dependency = null;
+                    if (class_exists($dependencyString)) {
+                        $dependency = $this->container->getLocator()->getClassAutoWire($dependencyString);
+                    } else {
+                        $dependency = $this->container->getLocator()->loadDependency('@' . $dependency);
+                    }
+                    $data = $dependency->$method($data);
                 } else {
                     $type = strtolower($type);
                     if (str_starts_with($type, '?')) {
@@ -105,7 +111,7 @@ class Hydrator implements HydratorInterface
                         if (!$data) {
                             $data = [];
                         } elseif (is_array($data)) {
-                            $data = array_filter($data, function ($value) {
+                            $data = array_filter((array)$data, function ($value) {
                                 return $value !== '';
                             });
                         } else {
