@@ -55,7 +55,7 @@ class Hydrator implements HydratorInterface
                     if (class_exists($dependencyString)) {
                         $dependency = $this->container->getLocator()->getClassAutoWire($dependencyString);
                     } else {
-                        $dependency = $this->container->getLocator()->loadDependency('@' . $dependency);
+                        $dependency = $this->container->getLocator()->loadDependency('@' . $dependencyString);
                     }
                     $data = $dependency->$method($data);
                 } else {
