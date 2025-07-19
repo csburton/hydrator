@@ -150,8 +150,17 @@ class Hydrator implements HydratorInterface
         $args = $attributes[0]->getArguments();
         $service = $args['serviceName'];
         $methodName = $args['methodName'];
+        $className = $args['className'];
+        if ($className) {
+            $dep = $this->container->getLocator()->getClassAutoWire($className);
+        } else {
+            $dep = $this->container->getLocator()->loadDependency($service);
+        }
+        if (!$dep) {
+            throw new \RuntimeException('Unable to load dependency ' . ($service ?: $className) . '::' . $methodName);
+        }
 
-        return $this->container->getLocator()->loadDependency($service)->$methodName($field);
+        return $dep->$methodName($field);
     }
 
     public function hydrateSet(string $className, array $data): array
