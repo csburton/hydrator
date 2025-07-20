@@ -105,7 +105,10 @@ SETTER_BODY;
         if ($reflectionMethod->getReturnType() instanceof ReflectionNamedType) {
             $returnType = $reflectionMethod->getReturnType()->getName();
             if (str_contains($returnType, '\\')) {
-                $namespace->addUse($reflectionMethod->getReturnType());
+                if (substr($returnType, 0, 1) === '?') {
+                    $returnType = substr($returnType, 1);
+                }
+                $namespace->addUse($returnType);
             }
             $method->setReturnType($reflectionMethod->getReturnType()->getName());
         }

@@ -47,7 +47,8 @@ class Hydrator implements HydratorInterface
             }
         }
         if ($isLazy === true) {
-            $class = $this->createProxyClass($className);
+            $reflectionClass = $this->createProxyClass($className);
+            $class = $reflectionClass->newInstance();
         }
         foreach ($properties as $propertyInfo) {
             $config = $propertyInfo['config'];
