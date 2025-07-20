@@ -49,6 +49,7 @@ class Hydrator implements HydratorInterface
         if ($isLazy === true) {
             $reflectionClass = $this->createProxyClass($className);
             $class = $reflectionClass->newInstance();
+            $class->setHydratorParams($hydrateData);
         }
         foreach ($properties as $propertyInfo) {
             $config = $propertyInfo['config'];
