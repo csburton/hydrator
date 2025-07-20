@@ -67,7 +67,7 @@ if (isset(\$this->completedLookups['$getter'])) {
     return \$parentValue;
 }
 \$this->completedLookups['$getter'] = true;
-\$value = \$this->getLocator()->loadDependency('$lookupDependency')->$lookupMethod($lookupValue); 
+\$value = \$this->getLocator()->getClassAutowire('$lookupDependency')->$lookupMethod($lookupValue); 
 if (\$value) {
     parent::{$setter}(\$value);
 }
