@@ -34,8 +34,24 @@ class Hydrator implements HydratorInterface
         if (empty($hydrateData)) {
             return null;
         }
+        $properties = [];
+        $isLazy = false;
         foreach ($reflectionClass->getProperties() as $property) {
             $config = ReflectionUtilities::parseAttributesIntoConfig($property);
+            $properties[] = [
+                'config' => $config,
+                'reflection_property' => $property
+            ];
+            if ($config['lazy'] === true) {
+                $isLazy = true;
+            }
+        }
+        if ($isLazy === true) {
+            $class = $this->createProxyClass($className);
+        }
+        foreach ($properties as $propertyInfo) {
+            $config = $propertyInfo['config'];
+            $property = $propertyInfo['reflection_property'];
             $field = $config['field_name'] ?: StringUtilities::snakeCase($property->getName());
             $type = $config['type'] ?? '';
             /**
@@ -181,7 +197,7 @@ class Hydrator implements HydratorInterface
     {
         $dir = ApplicationHelper::getApplicationRoot() . '/conf/cache/proxies/';
         if (!is_dir($dir)) {
-            mkdir($dir);
+            mkdir($dir, 0777, true);
         }
         $reflection = new \ReflectionClass($className);
         $filename = $reflection->getFileName();
