@@ -67,7 +67,7 @@ if (isset(\$this->completedLookups['$getter'])) {
     return \$parentValue;
 }
 \$this->completedLookups['$getter'] = true;
-\$value = \$this->getLocator()->getClassAutowire('$lookupDependency')->$lookupMethod($lookupValue); 
+\$value = $lookupValue?\$this->getLocator()->loadDependency('$lookupDependency')->$lookupMethod($lookupValue):null;
 if (\$value) {
     parent::{$setter}(\$value);
 }
@@ -110,7 +110,7 @@ SETTER_BODY;
                 }
                 $namespace->addUse($returnType);
             }
-            $method->setReturnType($reflectionMethod->getReturnType()->getName());
+            $method->setReturnType($reflectionMethod->getReturnType()->getName())->setReturnNullable($reflectionMethod->getReturnType()->allowsNull());
         }
         foreach ($reflectionMethod->getParameters() as $parameter) {
             $method->addParameter(
