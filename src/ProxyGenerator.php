@@ -59,6 +59,11 @@ class ProxyGenerator
                 } else {
                     $lookupValue = "\$this->hydratorParams['$fieldName']";
                 }
+                $locatorMethod = 'loadDependency';
+                if ($config['hydrator_class'] !== null) {
+                    $locatorMethod = 'getClassAutoWire';;
+                    $lookupDependency = $config['hydrator_class'];
+                }
                 $getterMethod = $this->cloneMethod($reflection->getMethod($getter), $class, $namespace);
                 $body = <<<METHOD_BODY
 global \$app;
@@ -67,7 +72,7 @@ if (isset(\$this->completedLookups['$getter'])) {
     return \$parentValue;
 }
 \$this->completedLookups['$getter'] = true;
-\$value = $lookupValue?\$this->getLocator()->loadDependency('$lookupDependency')->$lookupMethod($lookupValue):null;
+\$value = $lookupValue?\$this->getLocator()->$locatorMethod('$lookupDependency')->$lookupMethod($lookupValue):null;
 if (\$value) {
     parent::{$setter}(\$value);
 }
