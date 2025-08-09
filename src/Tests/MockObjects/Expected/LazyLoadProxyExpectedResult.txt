@@ -26,7 +26,7 @@ class LazyLoadModelProxyClass extends LazyLoadModel implements ProxyInterface
             return $parentValue;
         }
         $this->completedLookups['getTest'] = true;
-        $value = $this->getLocator()->loadDependency('SomeClass')->getSomeMethod($this->hydratorParams['test_field']);
+        $value = $this->hydratorParams['test_field']?$this->getLocator()->loadDependency('SomeClass')->getSomeMethod($this->hydratorParams['test_field']):null;
         if ($value) {
             parent::setTest($value);
         }

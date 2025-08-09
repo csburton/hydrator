@@ -13,14 +13,17 @@ use Pantono\Hydrator\Tests\MockObjects\TrimModel;
 use Pantono\Hydrator\Tests\MockObjects\DifferentFieldModel;
 use Pantono\Hydrator\Tests\MockObjects\BoolModel;
 use Pantono\Contracts\Container\ContainerInterface;
+use Pantono\Contracts\Application\Cache\ApplicationCacheInterface;
 
 class HydratorTest extends TestCase
 {
     private MockObject|ContainerInterface $container;
+    private MockObject|ApplicationCacheInterface $cache;
 
     public function setUp(): void
     {
         $this->container = $this->getMockBuilder(ContainerInterface::class)->getMock();
+        $this->cache = $this->getMockBuilder(ApplicationCacheInterface::class)->getMock();
     }
 
     public function testSimpleHydrate(): void
@@ -109,8 +112,53 @@ class HydratorTest extends TestCase
         );
     }
 
+    public function testHydrateCached(): void
+    {
+        $testClass = new class {
+            private string $value;
+
+            public function setValue(string $value): void
+            {
+                $this->value = $value;
+            }
+
+            public function getValue(): string
+            {
+                return $this->value;
+            }
+        };
+
+        $className = get_class($testClass);
+        $cacheKey = 'test_key';
+        $data = ['value' => 'cached_value'];
+
+        // First call - cache miss
+        $this->cache->expects($this->once())
+            ->method('get')
+            ->with($this->equalTo('test_key'))
+            ->willReturn(null);
+
+        $this->cache->expects($this->once())
+            ->method('set')
+            ->with(
+                $this->equalTo('test_key'),
+                $this->callback(function ($obj) {
+                    return $obj->getValue() === 'cached_value';
+                })
+            );
+
+        $result = $this->getHydrator()->hydrateCached(
+            $cacheKey,
+            $className,
+            fn() => $data
+        );
+
+        $this->assertSame('cached_value', $result->getValue());
+    }
+
+
     private function getHydrator(): Hydrator
     {
-        return new Hydrator($this->container);
+        return new Hydrator($this->container, $this->cache);
     }
 }
