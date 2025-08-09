@@ -11,14 +11,40 @@ use Pantono\Contracts\Container\ContainerInterface;
 use Pantono\Contracts\Hydrator\HydratorInterface;
 use Pantono\Contracts\Attributes\Locator;
 use Pantono\Utilities\ReflectionUtilities;
+use Pantono\Contracts\Application\Cache\ApplicationCacheInterface;
+use Pantono\Utilities\CacheHelper;
 
 class Hydrator implements HydratorInterface
 {
     private ContainerInterface $container;
+    private ApplicationCacheInterface $cache;
 
-    public function __construct(ContainerInterface $container)
+    public function __construct(ContainerInterface $container, ApplicationCacheInterface $cache)
     {
         $this->container = $container;
+        $this->cache = $cache;
+    }
+
+    public function hydrateCached(string $key, string $className, callable $callback): mixed
+    {
+        $key = CacheHelper::cleanCacheKey($key);
+        if (!$value = $this->cache->get($key)) {
+            $value = $this->hydrate($className, $callback());
+        }
+        $this->cache->set($key, $value);
+
+        return $value;
+    }
+
+    public function hydrateSetCached(string $key, string $className, callable $callback): mixed
+    {
+        $key = CacheHelper::cleanCacheKey($key);
+        if (!$value = $this->cache->get($key)) {
+            $value = $this->hydrateSet($className, $callback());
+        }
+        $this->cache->set($key, $value);
+
+        return $value;
     }
 
     public function hydrate(string $className, ?array $hydrateData = []): mixed
