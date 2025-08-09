@@ -17,9 +17,9 @@ use Pantono\Utilities\CacheHelper;
 class Hydrator implements HydratorInterface
 {
     private ContainerInterface $container;
-    private ApplicationCacheInterface $cache;
+    private ?ApplicationCacheInterface $cache;
 
-    public function __construct(ContainerInterface $container, ApplicationCacheInterface $cache)
+    public function __construct(ContainerInterface $container, ?ApplicationCacheInterface $cache = null)
     {
         $this->container = $container;
         $this->cache = $cache;
@@ -27,6 +27,9 @@ class Hydrator implements HydratorInterface
 
     public function hydrateCached(string $key, string $className, callable $callback): mixed
     {
+        if ($this->cache === null) {
+            return $this->hydrate($className, $callback());
+        }
         $key = CacheHelper::cleanCacheKey($key);
         if (!$value = $this->cache->get($key)) {
             $value = $this->hydrate($className, $callback());
@@ -38,6 +41,9 @@ class Hydrator implements HydratorInterface
 
     public function hydrateSetCached(string $key, string $className, callable $callback): mixed
     {
+        if ($this->cache === null) {
+            return $this->hydrateSet($className, $callback());
+        }
         $key = CacheHelper::cleanCacheKey($key);
         if (!$value = $this->cache->get($key)) {
             $value = $this->hydrateSet($className, $callback());
