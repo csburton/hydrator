@@ -31,12 +31,7 @@ class Hydrator implements HydratorInterface
             return $this->hydrate($className, $callback());
         }
         $key = CacheHelper::cleanCacheKey($key);
-        if (!$value = $this->cache->get($key)) {
-            $value = $this->hydrate($className, $callback());
-        }
-        $this->cache->set($key, $value);
-
-        return $value;
+        return $this->cache->getCallback($key, $callback);
     }
 
     public function hydrateSetCached(string $key, string $className, callable $callback): mixed
