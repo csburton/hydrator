@@ -31,6 +31,9 @@ class Hydrator implements HydratorInterface
             return $this->hydrate($className, $callback());
         }
         $key = CacheHelper::cleanCacheKey($key);
+        /**
+         * @var array<int|string,string>|null $value
+         */
         $value = $this->cache->getCallback($key, $callback);
         return $this->hydrate($className, $value);
     }
@@ -77,7 +80,9 @@ class Hydrator implements HydratorInterface
         if ($isLazy === true) {
             $reflectionClass = $this->createProxyClass($className);
             $class = $reflectionClass->newInstance();
-            $class->setHydratorParams($hydrateData);
+            if (method_exists($class, 'setHydratorParams')) {
+                $class->setHydratorParams($hydrateData);
+            }
         }
         foreach ($properties as $propertyInfo) {
             $config = $propertyInfo['config'];
@@ -221,6 +226,7 @@ class Hydrator implements HydratorInterface
 
     /**
      * @param class-string $className
+     * @return \ReflectionClass<object>
      * @throws \ReflectionException
      */
     private function createProxyClass(string $className): \ReflectionClass
