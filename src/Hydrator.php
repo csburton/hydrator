@@ -25,6 +25,11 @@ class Hydrator implements HydratorInterface
         $this->cache = $cache;
     }
 
+    /**
+     * @param string $key
+     * @param class-string $className
+     * @param callable $callback
+     */
     public function hydrateCached(string $key, string $className, callable $callback): mixed
     {
         if ($this->cache === null) {
@@ -32,12 +37,17 @@ class Hydrator implements HydratorInterface
         }
         $key = CacheHelper::cleanCacheKey($key);
         /**
-         * @var array<int|string,string>|null $value
+         * @var array<string,mixed>|null $value
          */
         $value = $this->cache->getCallback($key, $callback);
         return $this->hydrate($className, $value);
     }
 
+    /**
+     * @param string $key
+     * @param class-string $className
+     * @param callable $callback
+     */
     public function hydrateSetCached(string $key, string $className, callable $callback): mixed
     {
         if ($this->cache === null) {
@@ -52,6 +62,13 @@ class Hydrator implements HydratorInterface
         return $value;
     }
 
+    /**
+     * @template T of object
+     * @param class-string<T> $className
+     * @param array<string, mixed>|null $hydrateData
+     * @return T|null
+     * @throws \ReflectionException
+     */
     public function hydrate(string $className, ?array $hydrateData = []): mixed
     {
         if ($hydrateData === null) {
@@ -60,7 +77,9 @@ class Hydrator implements HydratorInterface
         if (!class_exists($className)) {
             throw new \RuntimeException('Class ' . $className . ' does not exist for hydration');
         }
+        /** @var \ReflectionClass<T> $reflectionClass */
         $reflectionClass = new \ReflectionClass($className);
+        /** @var T $class */
         $class = $reflectionClass->newInstance();
         if (empty($hydrateData)) {
             return null;
@@ -78,7 +97,9 @@ class Hydrator implements HydratorInterface
             }
         }
         if ($isLazy === true) {
+            /** @var \ReflectionClass<T> $reflectionClass */
             $reflectionClass = $this->createProxyClass($className);
+            /** @var T $class */
             $class = $reflectionClass->newInstance();
             if (method_exists($class, 'setHydratorParams')) {
                 $class->setHydratorParams($hydrateData);
@@ -214,6 +235,10 @@ class Hydrator implements HydratorInterface
         return $dep->$methodName($field);
     }
 
+    /**
+     * @param class-string $className
+     * @param array $data
+     */
     public function hydrateSet(string $className, array $data): array
     {
         $items = [];
